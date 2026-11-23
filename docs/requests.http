@@ -1,0 +1,82 @@
+@base = http://127.0.0.1:4000/api/v1
+@sessionToken = paste-session-token-here
+@adminToken = paste-private-admin-token-here
+
+### Create session (copy returned token above)
+POST {{base}}/sessions
+
+### Onboarding
+PATCH {{base}}/sessions/me
+Authorization: Bearer {{sessionToken}}
+Content-Type: application/json
+
+{"area":"Fitzroy","interests":["strength","mobility"],"formats":["mat","reformer"],"onboardingComplete":true}
+
+### Fresh workouts
+GET {{base}}/workouts?format=mat&limit=20
+
+### Nearest reformer studios
+GET {{base}}/studios?format=reformer&latitude=-37.798&longitude=144.978&radiusKm=50&sort=nearest
+
+### Studio profile, instructors and referral code
+GET {{base}}/studios/studio-melbourne
+
+### Workout product tags
+GET {{base}}/workouts/workout-mat
+
+### Product bundles
+GET {{base}}/shop/products?collection=bundles
+
+### Set absolute quantity
+PUT {{base}}/shop/cart/items
+Authorization: Bearer {{sessionToken}}
+Content-Type: application/json
+
+{"productId":"product-socks","variantId":"socks-s","quantity":2}
+
+### Referral attribution
+POST {{base}}/referrals/apply
+Authorization: Bearer {{sessionToken}}
+Content-Type: application/json
+
+{"code":"FITZROY-DEMO"}
+
+### Demo quote
+POST {{base}}/shop/checkout/quote
+Authorization: Bearer {{sessionToken}}
+Content-Type: application/json
+
+{"fulfillment":"warehouse-collect","source":"app","discountCode":"WELCOME15"}
+
+### Demo checkout: retain the same key when retrying this order
+POST {{base}}/shop/checkout
+Authorization: Bearer {{sessionToken}}
+Idempotency-Key: demo-checkout-001
+Content-Type: application/json
+
+{"fulfillment":"warehouse-collect","source":"app","discountCode":"WELCOME15"}
+
+### Personal demo orders
+GET {{base}}/shop/orders
+Authorization: Bearer {{sessionToken}}
+
+### Partner geo offer
+GET {{base}}/offers?latitude=-37.798&longitude=144.978
+
+### MoveActive admin overview
+GET {{base}}/admin/overview
+Authorization: Bearer {{adminToken}}
+
+### Update sample studio
+PATCH {{base}}/admin/studios/studio-melbourne
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"description":"Updated sample partner studio for internal playtesting."}
+
+### Manage studio-led affiliation
+POST {{base}}/admin/affiliations
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"studioId":"studio-melbourne","instructorId":"instructor-ella"}
