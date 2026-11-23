@@ -1,8 +1,12 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsDateString, IsIn, IsInt, IsNumber, IsString, IsUrl, Length, Matches, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsDateString, IsIn, IsInt, IsNumber, IsString, IsUrl, Length, Matches, Max, MaxLength, Min, ValidateIf, ValidateNested, ValidateBy, isURL } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
 const https = { protocols: ['https'], require_protocol: true };
+const IsImageUrl = () => ValidateBy({ name: 'imageUrl', validator: {
+  validate: value => typeof value === 'string' && value.length <= 2048 && (/^\/media\/images\/[a-zA-Z0-9/_-]+\.(jpg|jpeg|png|webp)$/.test(value) || isURL(value, https)),
+  defaultMessage: () => 'imageUrl must be an HTTPS URL or a backend /media/images/ path',
+} });
 // Optional means absent, not null; null cannot bypass validation.
 const IsOptional = () => ValidateIf((_object, value) => value !== undefined);
 export class PageQuery {
@@ -35,7 +39,7 @@ export class ProfileDto {
 export class StudioDto {
   @ApiProperty() @IsString() @Length(1, 200) name!: string;
   @ApiProperty() @IsString() @Length(1, 5000) description!: string;
-  @ApiProperty() @IsUrl(https) imageUrl!: string;
+  @ApiProperty() @IsImageUrl() imageUrl!: string;
   @ApiProperty() @IsString() @Length(1, 100) city!: string;
   @ApiProperty() @Matches(/^[A-Z]{2}$/) country!: string;
   @ApiProperty() @IsString() @Length(1, 300) address!: string;
@@ -50,7 +54,7 @@ export class StudioDto {
 export class InstructorDto {
   @ApiProperty() @IsString() @Length(1, 200) name!: string;
   @ApiProperty() @IsString() @Length(1, 5000) bio!: string;
-  @ApiProperty() @IsUrl(https) imageUrl!: string;
+  @ApiProperty() @IsImageUrl() imageUrl!: string;
   @ApiProperty() @IsBoolean() independent!: boolean;
   @ApiProperty({ enum: ['pending', 'approved', 'rejected'] }) @IsIn(['pending', 'approved', 'rejected']) approvalStatus!: string;
   @ApiProperty() @IsBoolean() published!: boolean;
@@ -65,7 +69,7 @@ export class WorkoutDto {
   @ApiProperty() @IsString() @Length(1, 100) studioId!: string;
   @ApiProperty({ type: [String] }) @IsArray() @ArrayMinSize(1) @ArrayMaxSize(30) @ArrayUnique() @IsString({ each: true }) @Length(1, 100, { each: true }) instructorIds!: string[];
   @ApiProperty({ type: [String] }) @IsArray() @ArrayMaxSize(30) @ArrayUnique() @IsString({ each: true }) @Length(1, 100, { each: true }) productIds!: string[];
-  @ApiProperty() @IsUrl(https) imageUrl!: string;
+  @ApiProperty() @IsImageUrl() imageUrl!: string;
   @ApiProperty() @IsUrl(https) videoUrl!: string;
   @ApiProperty() @IsBoolean() published!: boolean;
   @ApiProperty() @IsDateString() publishedAt!: string;
@@ -79,7 +83,7 @@ export class VariantDto {
 export class ProductDto {
   @ApiProperty() @IsString() @Length(1, 200) title!: string;
   @ApiProperty() @IsString() @Length(1, 5000) description!: string;
-  @ApiProperty() @IsUrl(https) imageUrl!: string;
+  @ApiProperty() @IsImageUrl() imageUrl!: string;
   @ApiProperty() @IsString() @Length(1, 100) collection!: string;
   @ApiProperty({ type: [String] }) @IsArray() @ArrayMaxSize(30) @ArrayUnique() @IsString({ each: true }) @Length(1, 100, { each: true }) tags!: string[];
   @ApiProperty({ enum: ['AUD', 'USD', 'GBP'] }) @IsIn(['AUD', 'USD', 'GBP']) currency!: string;

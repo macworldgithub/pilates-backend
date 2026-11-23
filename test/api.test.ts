@@ -50,7 +50,7 @@ test('onboarding persists location, formats and interests; invalid completion is
 });
 test('studio nearest search, format and radius filters work', async () => {
   const studios = (await api.get('/api/v1/studios?format=reformer&latitude=-37.798&longitude=144.978&radiusKm=20&sort=nearest').expect(200)).body;
-  assert.equal(studios.data.length, 1); assert.equal(studios.data[0].id, 'studio-melbourne'); assert.equal(studios.data[0].distanceKm, 0);
+  assert.equal(studios.data.length, 3); assert.equal(studios.data[0].id, 'studio-melbourne'); assert.equal(studios.data[0].distanceKm, 0);
   await api.get('/api/v1/studios?latitude=0').expect(400);
   await api.get('/api/v1/studios?sort=nearest').expect(400);
   await api.get('/api/v1/studios?limit=500').expect(400);

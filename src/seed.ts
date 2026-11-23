@@ -4,20 +4,40 @@ import { createConnection, Connection } from 'mongoose';
 import { schemas } from './models';
 import { seedData } from './seed-data';
 import { validateEnv } from './app.module';
+import { uiSeedData } from './ui-seed-data';
 
 export async function seedDatabase(db: Connection) {
   for (const [name, schema] of Object.entries(schemas)) if (!db.models[name]) db.model(name, schema);
   await Promise.all(Object.keys(schemas).map(name => db.model(name).init()));
-  if (await db.model('Seed').exists({ _id: 'orbit-mvp-v1' })) return { seeded: false, reason: 'Sample data was already seeded; existing edits retained' };
-  for (const [name, records] of Object.entries(seedData)) for (const record of records) {
-    const { _id, ...rest } = record;
-    await db.model(name).updateOne({ _id }, { $setOnInsert: rest }, { upsert: true, runValidators: true });
+  let seeded = false;
+  if (!await db.model('Seed').exists({ _id: 'orbit-mvp-v1' })) {
+    for (const [name, records] of Object.entries(seedData)) for (const record of records) {
+      const { _id, ...rest } = record;
+      await db.model(name).updateOne({ _id }, { $setOnInsert: rest }, { upsert: true, runValidators: true });
+    }
+    for (const [studioId, instructorId] of [['studio-melbourne', 'instructor-ella'], ['studio-sydney', 'instructor-james']]) {
+      await db.model('Affiliation').updateOne({ studioId, instructorId }, { $setOnInsert: { studioId, instructorId } }, { upsert: true });
+    }
+    await db.model('Seed').updateOne({ _id: 'orbit-mvp-v1' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
+    seeded = true;
   }
-  for (const [studioId, instructorId] of [['studio-melbourne', 'instructor-ella'], ['studio-sydney', 'instructor-james']]) {
-    await db.model('Affiliation').updateOne({ studioId, instructorId }, { $setOnInsert: { studioId, instructorId } }, { upsert: true });
+  if (!await db.model('Seed').exists({ _id: 'orbit-ui-v2' })) {
+    for (const [name, records] of Object.entries(uiSeedData)) for (const { _id, ...data } of records) {
+      await db.model(name).updateOne({ _id }, { $setOnInsert: data }, { upsert: true, runValidators: true });
+    }
+    await db.model('Affiliation').updateOne({ studioId: 'core-collective', instructorId: 'mia-chen' }, { $setOnInsert: { studioId: 'core-collective', instructorId: 'mia-chen' } }, { upsert: true });
+    await db.model('Seed').updateOne({ _id: 'orbit-ui-v2' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
+    seeded = true;
   }
-  await db.model('Seed').updateOne({ _id: 'orbit-mvp-v1' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
-  return { seeded: true, mode: 'sample-data-only' };
+  if (!await db.model('Seed').exists({ _id: 'orbit-media-v3' })) {
+    for (const [name, records] of Object.entries(uiSeedData)) for (const record of records) {
+      if (!record.imageUrl) continue;
+      await db.model(name).updateOne({ _id: record._id, imageUrl: /^https:\/\/placehold\.co\// }, { $set: { imageUrl: record.imageUrl } });
+    }
+    await db.model('Seed').updateOne({ _id: 'orbit-media-v3' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
+    seeded = true;
+  }
+  return { seeded, mode: 'sample-data-only', reason: seeded ? 'Missing seed versions applied' : 'Sample data already seeded; existing edits retained' };
 }
 async function main() {
   try { loadEnvFile(); } catch (error: any) { if (error.code !== 'ENOENT') throw error; }

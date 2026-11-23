@@ -10,6 +10,7 @@ import { SessionsModule } from './sessions';
 import { CatalogModule } from './catalog';
 import { CommerceModule } from './commerce';
 import { AdminModule } from './admin';
+import { AdminAuthModule } from './admin-auth';
 
 export function validateEnv(env: Record<string, unknown>) {
   const uri = String(env.MONGODB_URI ?? '');
@@ -19,7 +20,6 @@ export function validateEnv(env: Record<string, unknown>) {
   if (!Number.isInteger(days) || days < 1 || days > 90) throw new Error('SESSION_TTL_DAYS must be between 1 and 90');
   const admin = String(env.ADMIN_TOKEN ?? '');
   if (admin && (admin.length < 32 || admin.startsWith('replace-'))) throw new Error('ADMIN_TOKEN must be a private token of at least 32 characters');
-  if (env.NODE_ENV === 'production' && !admin) throw new Error('ADMIN_TOKEN is required in production');
   return { ...env, PORT: port, SESSION_TTL_DAYS: days };
 }
 @ApiTags('Health')
@@ -42,7 +42,7 @@ class HealthController {
       connectionErrorFactory: () => new Error('MongoDB connection failed. Check credentials, network access and Atlas IP allowlist.'),
     }) }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 180 }]),
-    ModelsModule, SessionsModule, CatalogModule, CommerceModule, AdminModule,
+    ModelsModule, SessionsModule, CatalogModule, CommerceModule, AdminAuthModule, AdminModule,
   ],
   controllers: [HealthController], providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

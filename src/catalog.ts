@@ -5,6 +5,7 @@ import { Connection } from 'mongoose';
 import { clean } from './models';
 import { DiscoverQuery } from './dto';
 import { distance, geo, page, search } from './common';
+import { siteConfig } from './site-config';
 
 @Injectable()
 export class CatalogService {
@@ -80,6 +81,11 @@ export class CatalogService {
     if (!owner) throw new NotFoundException('Referral owner is not available');
     return { ...ref, owner: { id: owner.id, name: owner.name }, deepLink: `projectorbit://referral/${encodeURIComponent(ref.code)}`, mode: 'simulated', commissionsEnabled: false };
   }
+  async referrals(q: DiscoverQuery) {
+    const [studios, instructors, records] = await Promise.all([this.published('Studio'), this.instructors(), this.db.model('Referral').find({ active: true }).lean()]);
+    const eligible = records.filter((r: any) => (r.ownerType === 'studio' ? studios : instructors).some(x => x.id === r.ownerId));
+    return page(await Promise.all(eligible.map((r: any) => this.referral(r.code))), q);
+  }
   async offers(q: DiscoverQuery) {
     geo(q);
     // Location is explicit opt-in; no coordinates means no geo offers.
@@ -99,7 +105,7 @@ export class CatalogService {
 export class CatalogController {
   constructor(private readonly catalog: CatalogService) {}
   @Get('config') @ApiOperation({ summary: 'Prototype capabilities, shop boundary and onboarding options' }) config() {
-    return { mode: 'simulated', currency: 'AUD', formats: ['mat', 'reformer'], interests: ['strength', 'mobility', 'balance', 'relaxation', 'flexibility'],
+    return { ...siteConfig, mode: 'simulated', currency: 'AUD', formats: ['mat', 'reformer'], interests: ['strength', 'mobility', 'balance', 'relaxation', 'flexibility'],
       shop: { environment: 'separate-shop', channel: 'D2C', source: 'sample-data', fulfillment: ['delivery', 'warehouse-collect'], realCheckout: false },
       features: { bookings: false, community: false, commissions: false, studioInventory: false, partnerSelfService: false, payments: false },
       discounts: [{ code: 'WELCOME15', percent: 15, firstOrderOnly: true }, { code: 'SEASON10', percent: 10, firstOrderOnly: false }] };
@@ -113,6 +119,7 @@ export class CatalogController {
   @Get('shop/products/:id') product(@Param('id') id: string) { return this.catalog.product(id); }
   @Get('shop/collections') async collections() { const products = await this.catalog.published('Product'); return { data: [...new Set(products.map(p => p.collection))] }; }
   @Get('referrals/:code') referral(@Param('code') code: string) { return this.catalog.referral(code); }
+  @Get('referrals') referrals(@Query() q: DiscoverQuery) { return this.catalog.referrals(q); }
   @Get('offers') offers(@Query() q: DiscoverQuery) { return this.catalog.offers(q); }
 }
 @Module({ controllers: [CatalogController], providers: [CatalogService], exports: [CatalogService] })

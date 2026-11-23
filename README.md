@@ -67,7 +67,7 @@ The cart is not a reservation. Availability is checked when quoting and checking
 
 ## Internal admin API
 
-Use `Authorization: Bearer <ADMIN_TOKEN>` with a trusted internal API client or Swagger. All `/admin/*` endpoints reject consumer session tokens. Admin is disabled if a valid token is not configured. There are no studio or instructor self-service accounts.
+The prototype has hardcoded credentials in `src/admin-auth.ts`: username **`admin`**, password **`OrbitAdmin123!`**. Call `POST /api/v1/admin/auth/login` with `{ "username": "admin", "password": "OrbitAdmin123!" }` and use its returned `accessToken` in Swagger's **admin** Authorize field or as `Authorization: Bearer <accessToken>`. Login is limited to five attempts per minute per IP. Admin sessions expire after eight hours; `DELETE /api/v1/admin/auth/session` revokes the current token. Only token hashes are stored in MongoDB. Consumer tokens cannot access admin resources. Trusted API clients can also continue using the optional private `ADMIN_TOKEN` from `.env`. There are no studio or instructor self-service accounts.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -90,6 +90,8 @@ Validation, a 64 KB JSON limit, security headers, exact-origin CORS, rate limiti
 
 See [the scope map](docs/scope.md). No production Shopify, Syncio, Peoplevox, Collabs, Klaviyo, Polar Analytics, GA, payment provider or App Store integration is enabled. There are no community features, bookings, marketplace/waitlists, live studio inventory, B2B reordering, payouts, Apple IAP, or AI form correction.
 
-The frontend is still the original React Native starter. To consume this API, use `http://10.0.2.2:4000/api/v1` on the Android emulator, `http://127.0.0.1:4000/api/v1` on an iOS simulator, or the host's LAN address on a physical device with `HOST=0.0.0.0`. Configure development HTTP access in the mobile platforms as needed. Never connect the mobile app directly to MongoDB.
+The React Native UI in `../pilates` consumes these APIs for onboarding, discovery, details, variants, cart, referral attribution, quotes, demo orders and internal admin management. Its `src/api/config.ts` uses `http://10.0.2.2:4000/api/v1` on Android emulators and `http://localhost:4000/api/v1` on iOS simulators. A physical device requires the host's LAN address and backend `HOST=0.0.0.0`. The app never connects directly to MongoDB or bundles the admin token.
+
+`npm run seed` also applies the additive `orbit-ui-v2` seed in `src/ui-seed-data.ts`. It adds the frontend's Core Collective / Mia Chen records, three Melbourne studios, two workouts, four products at their UI prices, studio-led affiliation and MIA10 / CORE-DEMO referral codes. Existing version-one records and admin edits are preserved. The `orbit-media-v3` migration replaces the UI records' original placeholder images with backend `/media/images/*` paths, while retaining custom image URLs. Images are served from `public/images`, which is also included in the Docker image. Completion markers are per seed version, so rerunning applies only missing versions. `GET /config` supplies onboarding areas, interest options and hero image URLs; `GET /referrals` lists available connections. The frontend contains no mock record or artwork lookup maps.
 
 Implementation follows the official [NestJS Mongoose integration](https://docs.nestjs.com/techniques/mongodb), [validation](https://docs.nestjs.com/techniques/validation), and [Swagger setup](https://docs.nestjs.com/openapi/introduction).

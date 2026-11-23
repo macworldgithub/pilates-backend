@@ -2,6 +2,12 @@
 @sessionToken = paste-session-token-here
 @adminToken = paste-private-admin-token-here
 
+### Admin login (copy returned accessToken into adminToken above)
+POST {{base}}/admin/auth/login
+Content-Type: application/json
+
+{"username":"admin","password":"OrbitAdmin123!"}
+
 ### Create session (copy returned token above)
 POST {{base}}/sessions
 

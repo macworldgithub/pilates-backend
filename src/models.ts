@@ -30,10 +30,13 @@ export const schemas = {
   Event: new Schema({ _id: id, sessionId: String, name: text, source: { type: String, enum: ['app', 'web'], required: true }, metadata: { type: Schema.Types.Mixed, default: {} } }, options),
   Audit: new Schema({ _id: id, action: text, entityType: text, entityId: text }, options),
   Seed: new Schema({ _id: id, completedAt: Date }, options),
+  AdminSession: new Schema({ _id: id, tokenHash: text, expiresAt: { type: Date, required: true } }, options),
 };
 schemas.Affiliation.index({ studioId: 1, instructorId: 1 }, { unique: true });
 schemas.Session.index({ tokenHash: 1 }, { unique: true });
 schemas.Session.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+schemas.AdminSession.index({ tokenHash: 1 }, { unique: true });
+schemas.AdminSession.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 schemas.Referral.index({ code: 1 }, { unique: true });
 schemas.Order.index({ sessionId: 1, idempotencyKey: 1 }, { unique: true });
 schemas.Workout.index({ published: 1, publishedAt: -1 });

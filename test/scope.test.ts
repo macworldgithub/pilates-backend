@@ -32,6 +32,7 @@ before(async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = module.createNestApplication({ logger: false, bodyParser: false });
   app.use(json({ limit: '64kb', strict: true }));
+  app.useStaticAssets(resolve('public'), { prefix: '/media/' });
   configure(app, ['http://localhost:8081']);
   await app.init();
   db = app.get(getConnectionToken());
@@ -172,4 +173,64 @@ test('scope: malformed JSON, oversized bodies and browser origin rules are enfor
   const denied = await api.get('/api/v1/config').set('Origin', 'https://unlisted.example').expect(200);
   assert.equal(denied.headers['access-control-allow-origin'], undefined);
   assert(allowed.headers['x-content-type-options']);
+});
+
+test('frontend seed: studio, instructor, workout, tagged products and MIA10 form a complete journey', async () => {
+  const studio = (await api.get('/api/v1/studios/core-collective').expect(200)).body;
+  assert.equal(studio.name, 'Core Collective');
+  assert(studio.instructors.some((i: any) => i.id === 'mia-chen'));
+  assert(studio.workouts.some((w: any) => w.id === 'reformer-reset'));
+  const instructor = (await api.get('/api/v1/instructors/mia-chen').expect(200)).body;
+  assert.equal(instructor.studios[0].id, 'core-collective');
+  assert.equal(instructor.referrals[0].code, 'MIA10');
+  const workout = (await api.get('/api/v1/workouts/reformer-reset').expect(200)).body;
+  assert.equal(workout.durationMinutes, 15);
+  assert(workout.products.some((p: any) => p.id === 'grip-socks-pink'));
+  assert(workout.products.some((p: any) => p.id === 'starter-bundle'));
+  const mat = (await api.get('/api/v1/shop/products/yoga-mat-espresso').expect(200)).body;
+  assert.equal(mat.variants[0].price, 10900);
+});
+
+test('frontend seed: UI prices, variant selection and referral survive an API checkout', async () => {
+  const s = await consumer();
+  const product = (await api.get('/api/v1/shop/products/grip-socks-pink').expect(200)).body;
+  assert.equal(product.variants.find((v: any) => v.id === 'pink-m').price, 2295);
+  await api.put('/api/v1/shop/cart/items').set(s.headers).send({ productId: product.id, variantId: 'pink-m', quantity: 2 }).expect(200);
+  await api.post('/api/v1/referrals/apply').set(s.headers).send({ code: 'MIA10' }).expect(201);
+  const order = (await api.post('/api/v1/shop/checkout').set({ ...s.headers, 'Idempotency-Key': randomUUID() }).send({ fulfillment: 'warehouse-collect', source: 'app' }).expect(201)).body;
+  assert.equal(order.total, 4590); assert.equal(order.currency, 'AUD');
+  assert.equal(order.attribution.code, 'MIA10'); assert.equal(order.attribution.ownerId, 'mia-chen');
+  assert.equal(order.paymentRequired, false); assert.equal(order.inventoryUpdated, false);
+  assert.equal((await api.get('/api/v1/shop/cart').set(s.headers).expect(200)).body.items.length, 0);
+});
+
+test('admin login: fixed credentials issue expiring, revocable tokens; invalid logins are rejected', async () => {
+  const credentials = { username: 'admin', password: 'OrbitAdmin123!' };
+  await api.post('/api/v1/admin/auth/login').send({ ...credentials, password: 'wrong' }).expect(401);
+  await api.post('/api/v1/admin/auth/login').send({ ...credentials, username: 'wrong' }).expect(401);
+  const login = (await api.post('/api/v1/admin/auth/login').send(credentials).expect(201)).body;
+  assert(login.accessToken); assert(+new Date(login.expiresAt) > Date.now());
+  const headers = { Authorization: `Bearer ${login.accessToken}` };
+  await api.get('/api/v1/admin/overview').set(headers).expect(200);
+  await api.get('/api/v1/shop/cart').set(headers).expect(401);
+  const stored = await db.model('AdminSession').findOne().lean();
+  assert.notEqual(stored.tokenHash, login.accessToken);
+  await api.delete('/api/v1/admin/auth/session').set(headers).expect(200);
+  await api.get('/api/v1/admin/overview').set(headers).expect(401);
+  const next = (await api.post('/api/v1/admin/auth/login').send(credentials).expect(201)).body;
+  await db.model('AdminSession').updateMany({}, { $set: { expiresAt: new Date(0) } });
+  await api.get('/api/v1/admin/overview').set({ Authorization: `Bearer ${next.accessToken}` }).expect(401);
+});
+
+test('backend content: configuration, active referrals and actual image files populate the mobile UI', async () => {
+  const config = (await api.get('/api/v1/config').expect(200)).body;
+  assert(config.areas.length); assert(config.interestOptions.length);
+  await api.get(config.heroImageUrl).expect('Content-Type', /image\/jpeg/).expect(200);
+  const product = (await api.get('/api/v1/shop/products/grip-socks-pink').expect(200)).body;
+  assert(product.imageUrl.startsWith('/media/images/'));
+  await api.get(product.imageUrl).expect('Content-Type', /image\/png/).expect(200);
+  const refs = (await api.get('/api/v1/referrals').expect(200)).body.data;
+  assert(refs.some((r: any) => r.code === 'MIA10' && r.owner.name === 'Mia Chen'));
+  await api.patch('/api/v1/admin/studios/core-collective').set(admin).send({ name: 'Updated Core From API' }).expect(200);
+  assert.equal((await api.get('/api/v1/studios/core-collective').expect(200)).body.name, 'Updated Core From API');
 });

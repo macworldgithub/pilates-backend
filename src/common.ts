@@ -48,12 +48,13 @@ export class SessionGuard implements CanActivate {
 }
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly config: ConfigService) {}
-  canActivate(ctx: ExecutionContext) {
+  constructor(private readonly config: ConfigService, @InjectModel('AdminSession') private readonly sessions: Model<any>) {}
+  async canActivate(ctx: ExecutionContext) {
     const expected = this.config.get<string>('ADMIN_TOKEN');
-    if (!expected || expected.length < 32) throw new ServiceUnavailableException('Admin access is not configured');
     const provided = bearer(ctx.switchToHttp().getRequest());
-    if (!timingSafeEqual(Buffer.from(hash(expected)), Buffer.from(hash(provided)))) throw new UnauthorizedException('Invalid admin token');
+    if (expected && expected.length >= 32 && timingSafeEqual(Buffer.from(hash(expected)), Buffer.from(hash(provided)))) return true;
+    const session = await this.sessions.exists({ tokenHash: hash(provided), expiresAt: { $gt: new Date() } });
+    if (!session) throw new UnauthorizedException('Invalid or expired admin token');
     return true;
   }
 }
