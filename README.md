@@ -4,7 +4,7 @@ NestJS 11 with the Express adapter, TypeScript, Mongoose and MongoDB. Implements
 
 ## Run
 
-Use Node.js 22.11+ (Node 24 recommended).
+Use Node.js 22.11 or newer within Node 22 LTS (`22.x`), matching the Vercel runtime.
 
 ```powershell
 cd D:\mvp\pilates-backend
@@ -29,7 +29,7 @@ The ignored `.env` contains the supplied Atlas URI and a generated private admin
 
 `HOST` defaults to `127.0.0.1`; set `0.0.0.0` when accessing the API from a physical device or container. `PORT` defaults to `4000`. `CORS_ORIGINS` is an exact, comma-separated browser-origin allowlist. Native React Native HTTP requests do not require CORS. Anonymous sessions expire after `SESSION_TTL_DAYS` (1–90; default 30).
 
-Seeding is explicit, additive, repeatable and limited to named demo records. It does not drop databases or overwrite edits. Once its completion marker exists, subsequent runs make no changes. Demo image URLs use placeholders and workout media/booking URLs are deliberately nonfunctional `example.com` links. Replace these through the admin API with approved test content when available.
+Seeding is explicit, additive, repeatable and limited to named demo records. It does not drop databases or overwrite edits. Once its completion marker exists, subsequent runs make no changes. Seeded image URLs use packaged backend raster files; workout media/booking URLs are deliberately nonfunctional `example.com` links. Replace these through the admin API with approved test content when available.
 
 ## Consumer flow
 
@@ -69,6 +69,8 @@ The cart is not a reservation. Availability is checked when quoting and checking
 
 The prototype has hardcoded credentials in `src/admin-auth.ts`: username **`admin`**, password **`OrbitAdmin123!`**. Call `POST /api/v1/admin/auth/login` with `{ "username": "admin", "password": "OrbitAdmin123!" }` and use its returned `accessToken` in Swagger's **admin** Authorize field or as `Authorization: Bearer <accessToken>`. Login is limited to five attempts per minute per IP. Admin sessions expire after eight hours; `DELETE /api/v1/admin/auth/session` revokes the current token. Only token hashes are stored in MongoDB. Consumer tokens cannot access admin resources. Trusted API clients can also continue using the optional private `ADMIN_TOKEN` from `.env`. There are no studio or instructor self-service accounts.
 
+Internal playtest staff may optionally use the fixed shared credentials **`staff` / `OrbitStaff123!`**. First create an anonymous session, then call `POST /api/v1/auth/login` with its bearer token and the shared credentials. This changes only that session's account type; session profile, bag and orders remain intact. `POST /api/v1/auth/logout` returns the session to guest mode. Staff sign-in does not grant admin access, and failed attempts are rate limited.
+
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/admin/overview` | Counts and demo order summary |
@@ -95,3 +97,56 @@ The React Native UI in `../pilates` consumes these APIs for onboarding, discover
 `npm run seed` also applies the additive `orbit-ui-v2` seed in `src/ui-seed-data.ts`. It adds the frontend's Core Collective / Mia Chen records, three Melbourne studios, two workouts, four products at their UI prices, studio-led affiliation and MIA10 / CORE-DEMO referral codes. Existing version-one records and admin edits are preserved. The `orbit-media-v3` migration replaces the UI records' original placeholder images with backend `/media/images/*` paths, while retaining custom image URLs. Images are served from `public/images`, which is also included in the Docker image. Completion markers are per seed version, so rerunning applies only missing versions. `GET /config` supplies onboarding areas, interest options and hero image URLs; `GET /referrals` lists available connections. The frontend contains no mock record or artwork lookup maps.
 
 Implementation follows the official [NestJS Mongoose integration](https://docs.nestjs.com/techniques/mongodb), [validation](https://docs.nestjs.com/techniques/validation), and [Swagger setup](https://docs.nestjs.com/openapi/introduction).
+
+### Reference UI and media repair (November 2026)
+
+All seed generations now use packaged `/media/images/*` JPG/PNG artwork. Legacy `placehold.co` URLs defaulted to SVG, which the native mobile image component could not decode. The additive `orbit-media-v4` migration repairs known original URLs on both v1 and UI-v2 records, including databases already marked v3-complete. Custom artwork and archived/publication state are retained. Run `npm run seed` once per environment and restart the API to load the updated catalog code.
+
+Workout discovery now includes instructor/studio context and searches instructor names, studio names, titles and descriptions. Products accept an optional validated `imageUrls` gallery (up to 12 URLs). `/config` supplies the illustrative workshop card; it is a concept, not a booking or a confirmed event date. Membership and checkout remain prototype concepts as documented in the mobile README.
+
+## Deploy this backend to Vercel
+
+Import this backend Git repository into Vercel. If importing a repository containing both projects, set **Root Directory** to `pilates-backend`. Deploy the backend separately from the React Native application.
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | Other (the checked-in `framework: null` disables automatic NestJS detection) |
+| Node.js | 22.x |
+| Install command | `MONGOMS_DISABLE_POSTINSTALL=1 npm ci --include=dev` |
+| Build command | `npm run vercel-build` |
+| Output directory | `public` |
+| Function entry | `api/index.js` |
+
+The install command includes TypeScript build dependencies while skipping the test-only MongoDB binary download. The checked-in `vercel.json` sets these build settings, routes requests to the function and includes compiled server files, backend artwork and Swagger assets. `api/index.js` loads TypeScript compiled by `tsc`, retaining the decorator metadata required by Nest's dependency injection. Do not replace it with an uncompiled TypeScript entry or override the project to the automatic NestJS preset.
+
+### Environment and database
+
+Set these values in Vercel **Project Settings → Environment Variables**, for each deployment environment that needs them. Local `.env` files are excluded from uploads and ignored at runtime when `VERCEL=1`.
+
+| Variable | Value |
+| --- | --- |
+| `MONGODB_URI` | Required MongoDB Atlas/replica-set URI including the target database name |
+| `ADMIN_TOKEN` | Optional private API-client token, at least 32 characters; leave absent when using admin username/password login only |
+| `CORS_ORIGINS` | Exact comma-separated web client origins; leave empty for native-only clients |
+| `SESSION_TTL_DAYS` | Optional integer 1–90; default 30 |
+
+Allow the deployment's outbound network access in Atlas and grant the database user read/write access to the selected database. An Atlas replica set is required for atomic demo checkout. Use separate named sample databases for Preview and Production so preview testing does not change production sessions/orders. Keep the existing prototype admin/staff credentials and access model in mind when choosing deployment access: this remains an internal simulated MVP. Process-local login/API throttles reset on cold starts and are not shared across instances; use Vercel's firewall/rate limiting if a deployment needs a global limit.
+
+Run `npm run seed` once against the chosen database from a trusted local/CI environment before playtesting; configure that process with the target `MONGODB_URI`. Build and request handlers never seed the database. Seeding is additive and creates the indexes needed for unique tokens, referral codes and checkout idempotency. Do not run seeding as the Vercel build command.
+
+### Runtime behavior
+
+- `src/serverless.ts` caches one initialization promise per instance, so concurrent cold requests and warm requests share the Nest application and Mongoose pool. No persistent listener or shutdown signal hooks are registered by the function.
+- MongoDB pools allow at most 10 connections per instance, start with no minimum connections, release idle sockets after 60 seconds and bound pool waits to 10 seconds. Autoscaling can create multiple independent pools.
+- Initialization failure returns a generic, non-cacheable 503 and permits initialization to retry on a later request. Requests await completion of the Express response. Database details are not sent in error responses.
+- Public `/media/images/*` URLs rewrite to `public/images/*` through Vercel static hosting, keeping seeded URLs unchanged. All other API/docs/unknown paths go through the serverless entry. Static images therefore do not require MongoDB to be online.
+- `/docs`, `/docs/openapi.json`, authorization, request validation, the 64 KB JSON limit and CORS retain the same behavior as local startup. `npm start` still runs the normal local/container listener.
+- The function duration is capped at 60 seconds. There are no background workers, local database files or request-time filesystem writes.
+
+After deploying, check `https://YOUR-DEPLOYMENT/api/v1/health`, `/api/v1/config`, `/docs`, `/docs/openapi.json` and `/media/images/products/grip-socks-pink.png`. Exercise onboarding, add-to-bag and demo checkout against the seeded target database. If Vercel Deployment Protection is enabled, native app requests also need a permitted access path; a sign-in HTML response is not an API JSON response.
+
+Update the mobile API URL in `../pilates/src/api/config.ts` to `https://YOUR-DEPLOYMENT/api/v1` when connecting the app. No deployed hostname has been assumed or embedded in the app.
+
+Validation: `npm run check`, `npm run vercel-build`, and `npm test`. The serverless integration tests invoke the actual `api/index.js` entry and cover shared initialization, warm requests, authentication, validation, media/Swagger assets, CORS, a transactional demo checkout, and retry after a failed cold start. A hosted Vercel deployment is still required to verify platform routing and the target Atlas network configuration.
+
+Configuration references: [Vercel Node.js functions](https://vercel.com/docs/functions/runtimes/node-js), [function files and rewrites](https://vercel.com/docs/project-configuration/vercel-json), and [NestJS serverless initialization](https://docs.nestjs.com/faq/serverless).

@@ -1,0 +1,11 @@
+.git/
+.vercel/
+.env*
+.cache/
+node_modules/
+dist/
+coverage/
+data/
+test/
+docs/
+*.log

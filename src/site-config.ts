@@ -1,6 +1,7 @@
 export const siteConfig = {
   heroImageUrl: '/media/images/lifestyle/onboarding-hero.jpg',
   shopHeroImageUrl: '/media/images/products/yoga-mat-espresso.png',
+  eventConcept: { studioId: 'core-collective', title: 'Reformer fundamentals workshop', weekday: 'SAT', day: '24' },
   areas: [
     { area: 'Melbourne, VIC', latitude: -37.84, longitude: 144.98 },
     { area: 'Prahran, VIC', latitude: -37.8493, longitude: 144.9905 },

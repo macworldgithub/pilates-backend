@@ -35,9 +35,12 @@ class HealthController {
 }
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: process.env.VERCEL === '1', validate: validateEnv }),
     MongooseModule.forRootAsync({ inject: [ConfigService], useFactory: (config: ConfigService) => ({
       uri: config.getOrThrow<string>('MONGODB_URI'), serverSelectionTimeoutMS: 10000, connectTimeoutMS: 10000,
+      // Each Vercel instance owns a pool. Keep it bounded and release idle sockets;
+      // the serverless entry reuses this connection across warm requests.
+      maxPoolSize: 10, minPoolSize: 0, maxIdleTimeMS: 60000, waitQueueTimeoutMS: 10000,
       retryAttempts: 0, autoIndex: true,
       connectionErrorFactory: () => new Error('MongoDB connection failed. Check credentials, network access and Atlas IP allowlist.'),
     }) }),

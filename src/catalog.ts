@@ -53,7 +53,11 @@ export class CatalogService {
     return refs.map((ref: any) => ({ code: ref.code, deepLink: `projectorbit://referral/${encodeURIComponent(ref.code)}`, mode: 'simulated', commissionsEnabled: false }));
   }
   async listWorkouts(q: DiscoverQuery) {
-    const items = search(await this.workouts(), q).filter(w => (!q.format || w.format === q.format) && (!q.level || w.level === q.level) && (!q.interest || w.interests.includes(q.interest)) && (!q.studioId || w.studioId === q.studioId) && (!q.instructorId || w.instructorIds.includes(q.instructorId)));
+    const [workouts, instructors, studios] = await Promise.all([this.workouts(), this.instructors(), this.published('Studio')]);
+    const enriched = workouts.map(w => ({ ...w, instructors: instructors.filter(i => w.instructorIds.includes(i.id)), studio: studios.find(s => s.id === w.studioId) }));
+    const term = q.search?.trim().toLowerCase();
+    const matching = term ? enriched.filter(w => [w.title, w.description, w.studio?.name, ...w.instructors.map((i: any) => i.name)].some(value => value?.toLowerCase().includes(term))) : enriched;
+    const items = matching.filter(w => (!q.format || w.format === q.format) && (!q.level || w.level === q.level) && (!q.interest || w.interests.includes(q.interest)) && (!q.studioId || w.studioId === q.studioId) && (!q.instructorId || w.instructorIds.includes(q.instructorId)));
     return page(items, q);
   }
   async workout(id: string) {

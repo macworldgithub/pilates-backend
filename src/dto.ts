@@ -7,6 +7,10 @@ const IsImageUrl = () => ValidateBy({ name: 'imageUrl', validator: {
   validate: value => typeof value === 'string' && value.length <= 2048 && (/^\/media\/images\/[a-zA-Z0-9/_-]+\.(jpg|jpeg|png|webp)$/.test(value) || isURL(value, https)),
   defaultMessage: () => 'imageUrl must be an HTTPS URL or a backend /media/images/ path',
 } });
+const IsImageUrlList = () => ValidateBy({ name: 'imageUrls', validator: {
+  validate: value => Array.isArray(value) && value.every(url => typeof url === 'string' && url.length <= 2048 && (/^\/media\/images\/[a-zA-Z0-9/_-]+\.(jpg|jpeg|png|webp)$/.test(url) || isURL(url, https))),
+  defaultMessage: () => 'imageUrls must contain HTTPS URLs or backend image paths',
+} });
 // Optional means absent, not null; null cannot bypass validation.
 const IsOptional = () => ValidateIf((_object, value) => value !== undefined);
 export class PageQuery {
@@ -81,6 +85,7 @@ export class VariantDto {
   @ApiProperty() @IsBoolean() available!: boolean;
 }
 export class ProductDto {
+  @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() @ArrayMaxSize(12) @IsImageUrlList() imageUrls?: string[];
   @ApiProperty() @IsString() @Length(1, 200) title!: string;
   @ApiProperty() @IsString() @Length(1, 5000) description!: string;
   @ApiProperty() @IsImageUrl() imageUrl!: string;

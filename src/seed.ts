@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { loadEnvFile } from 'node:process';
 import { createConnection, Connection } from 'mongoose';
 import { schemas } from './models';
-import { seedData } from './seed-data';
+import { legacyImages, seedData } from './seed-data';
 import { validateEnv } from './app.module';
 import { uiSeedData } from './ui-seed-data';
 
@@ -35,6 +35,24 @@ export async function seedDatabase(db: Connection) {
       await db.model(name).updateOne({ _id: record._id, imageUrl: /^https:\/\/placehold\.co\// }, { $set: { imageUrl: record.imageUrl } });
     }
     await db.model('Seed').updateOne({ _id: 'orbit-media-v3' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
+    seeded = true;
+  }
+  if (!await db.model('Seed').exists({ _id: 'orbit-media-v4' })) {
+    // Repair both seed generations, even when the old v3 marker is already set.
+    // Match the original seed URL exactly so custom/admin artwork is retained.
+    for (const [name, records] of Object.entries(seedData)) for (const record of records) {
+      if (!record.imageUrl) continue;
+      const oldUrls = Object.entries(legacyImages).filter(([, url]) => url === record.imageUrl).map(([url]) => url);
+      await db.model(name).updateOne({ _id: record._id, imageUrl: { $in: oldUrls } }, { $set: { imageUrl: record.imageUrl } });
+    }
+    for (const [name, records] of Object.entries(uiSeedData)) for (const record of records) {
+      if (!record.imageUrl) continue;
+      const labels: Record<string, string> = { 'core-collective': 'Core Collective', 'pilates-room': 'The Pilates Room', 'form-flow': 'Form and Flow', 'mia-chen': 'Mia Chen', 'grip-socks-pink': 'Sweetie Candy Pink', 'grip-socks-blue': 'Donut Ice Blue', 'yoga-mat-espresso': 'Check Espresso Mat', 'starter-bundle': 'Pilates Starter Bundle', 'reformer-reset': 'Reformer Reset', 'full-body-mat-flow': 'Full Body Mat Flow' };
+      const label = labels[record._id];
+      const oldUrl = `https://placehold.co/800x600?text=${encodeURIComponent(label + ' Demo')}`;
+      await db.model(name).updateOne({ _id: record._id, imageUrl: oldUrl }, { $set: { imageUrl: record.imageUrl } });
+    }
+    await db.model('Seed').updateOne({ _id: 'orbit-media-v4' }, { $setOnInsert: { completedAt: new Date() } }, { upsert: true });
     seeded = true;
   }
   return { seeded, mode: 'sample-data-only', reason: seeded ? 'Missing seed versions applied' : 'Sample data already seeded; existing edits retained' };

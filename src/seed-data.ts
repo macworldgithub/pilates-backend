@@ -1,4 +1,15 @@
-const image = (label: string) => `https://placehold.co/800x600?text=${encodeURIComponent(label + ' Demo')}`;
+// Serve every seeded image ourselves; placehold.co defaults to SVG, which native
+// React Native Image cannot decode on Android/iOS.
+const files: Record<string, string> = {
+  Fitzroy: 'studios/core-collective.jpg', 'Surry Hills': 'studios/pilates-room.jpg', Shoreditch: 'studios/form-flow.jpg',
+  Ella: 'instructors/mia-chen.jpg', James: 'instructors/mia-chen.jpg', Alex: 'instructors/mia-chen.jpg',
+  'Grip Socks': 'products/grip-socks-pink.png', 'Pilates Ball': 'products/pilates-starter-bundle.jpg', 'Starter Bundle': 'products/pilates-starter-bundle.jpg',
+  'Mat Flow': 'lifestyle/reformer-reset.jpg', Reformer: 'lifestyle/reformer-reset.jpg', Balance: 'lifestyle/reformer-reset.jpg',
+};
+export const legacyImages = Object.fromEntries(Object.entries(files).map(([label, file]) => [
+  `https://placehold.co/800x600?text=${encodeURIComponent(label + ' Demo')}`, `/media/images/${file}`,
+]));
+const image = (label: string) => `/media/images/${files[label]}`;
 export const seedData: Record<string, any[]> = {
   Studio: [
     { _id: 'studio-melbourne', name: 'Orbit Fitzroy', description: 'Sample partner studio offering mindful mat and reformer classes.', imageUrl: image('Fitzroy'), city: 'Melbourne', country: 'AU', address: 'Sample address, Fitzroy VIC', latitude: -37.798, longitude: 144.978, formats: ['mat', 'reformer'], partnerType: 'partner', websiteUrl: 'https://example.com/fitzroy', bookingUrl: 'https://example.com/fitzroy/book', published: true },

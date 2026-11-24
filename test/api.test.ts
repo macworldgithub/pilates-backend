@@ -82,6 +82,17 @@ test('admin and sessions are separate authorization boundaries', async () => {
   await api.get('/api/v1/shop/cart').set(admin()).expect(401);
   await api.get('/api/v1/admin/overview').set(admin()).expect(200);
 });
+test('fixed staff credentials update the current session without granting admin access', async () => {
+  const session = (await api.post('/api/v1/sessions').expect(201)).body;
+  const headers = { Authorization: `Bearer ${session.token}` };
+  await api.post('/api/v1/auth/login').set(headers).send({ username: 'staff', password: 'wrong' }).expect(401);
+  const login = (await api.post('/api/v1/auth/login').set(headers).send({ username: 'staff', password: 'OrbitStaff123!' }).expect(201)).body;
+  assert.equal(login.accountType, 'staff');
+  assert.equal((await api.get('/api/v1/sessions/me').set(headers).expect(200)).body.accountType, 'staff');
+  await api.get('/api/v1/admin/overview').set(headers).expect(401);
+  const logout = (await api.post('/api/v1/auth/logout').set(headers).expect(201)).body;
+  assert.equal(logout.accountType, 'guest');
+});
 test('admin creates, updates and archives resources with strict validation', async () => {
   const body = { name: 'New Sample', bio: 'Sample studio instructor', imageUrl: 'https://example.com/image.jpg', independent: false, approvalStatus: 'approved', published: true };
   const created = (await api.post('/api/v1/admin/instructors').set(admin()).send(body).expect(201)).body;

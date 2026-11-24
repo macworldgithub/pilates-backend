@@ -11,6 +11,17 @@ Content-Type: application/json
 ### Create session (copy returned token above)
 POST {{base}}/sessions
 
+### Sign in as internal staff (requires sessionToken)
+POST {{base}}/auth/login
+Authorization: Bearer {{sessionToken}}
+Content-Type: application/json
+
+{"username":"staff","password":"OrbitStaff123!"}
+
+### Sign out of internal staff
+POST {{base}}/auth/logout
+Authorization: Bearer {{sessionToken}}
+
 ### Onboarding
 PATCH {{base}}/sessions/me
 Authorization: Bearer {{sessionToken}}

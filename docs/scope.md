@@ -15,6 +15,7 @@ Source: Project Orbit MVP Developer Brief, 20 November 2026, supplied PDF. This 
 | Tagged products and purchase path | Workout product tags, separate D2C `/shop`, variants and bundles, cart and demo checkout |
 | Referral unique link/code | Studio/instructor codes, custom-scheme demo links, last-applied session attribution and order snapshots |
 | Basic MoveActive admin | Protected list/create/detail/update/archive APIs for studios, instructors, workouts, products, codes and offers |
+| Internal staff sign-in | Optional shared demo staff credentials on an anonymous prototype session; separate from admin access |
 | Geo offers reserved for partners and stockists | Eligibility validated by admin and rechecked in public nearby-offer reads |
 | Shopify product/image/stock/transaction concepts | Sample catalog and order snapshots only; no live Shopify calls or inventory writes |
 | Warehouse collection, no studio pickup | Demo warehouse-collect fulfillment enum only |
@@ -36,4 +37,4 @@ Source: Project Orbit MVP Developer Brief, 20 November 2026, supplied PDF. This 
 
 ## Implementation choices for internal playtesting
 
-The brief does not prescribe account registration, shipping rates, currencies for each region, discount implementation, or a production authentication system. The backend uses anonymous sessions, a private internal admin token, AUD sample products with support for AUD/USD/GBP product records, flat demo shipping and session-scoped first-order eligibility. These choices are explicit demo behavior, not business policy for a production rollout. Photos, videos, booking destinations and studio addresses are placeholders. No real personal, payment, or studio stock data is required.
+The brief does not prescribe account registration, shipping rates, currencies for each region, discount implementation, or a production authentication system. The backend uses anonymous sessions, optional fixed staff credentials for internal playtesting, a separate private internal admin login, AUD sample products with support for AUD/USD/GBP product records, flat demo shipping and session-scoped first-order eligibility. These choices are explicit demo behavior, not business policy for a production rollout. Photos, videos, booking destinations and studio addresses are placeholders. No real personal, payment, or studio stock data is required.

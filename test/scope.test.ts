@@ -234,3 +234,36 @@ test('backend content: configuration, active referrals and actual image files po
   await api.patch('/api/v1/admin/studios/core-collective').set(admin).send({ name: 'Updated Core From API' }).expect(200);
   assert.equal((await api.get('/api/v1/studios/core-collective').expect(200)).body.name, 'Updated Core From API');
 });
+
+test('every seeded image, including legacy records, is served as a native-compatible raster', async () => {
+  const { seedData } = require('../dist/seed-data');
+  const { uiSeedData } = require('../dist/ui-seed-data');
+  for (const data of [seedData, uiSeedData]) for (const [model, records] of Object.entries(data)) {
+    for (const record of records as any[]) {
+      if (!record.imageUrl) continue;
+      const current = await db.model(model).findById(record._id).lean();
+      assert(current.imageUrl.startsWith('/media/images/'), record._id);
+      await api.get(current.imageUrl).expect('Content-Type', /image\/(jpeg|png|webp)/).expect(200);
+    }
+  }
+});
+
+test('v4 repairs old seed URLs after v3 without replacing custom images or republishing records', async () => {
+  const { seedDatabase } = require('../dist/seed');
+  await db.model('Studio').updateOne({ _id: 'studio-melbourne' }, { $set: { imageUrl: 'https://placehold.co/800x600?text=Fitzroy%20Demo', published: false } });
+  await db.model('Product').updateOne({ _id: 'grip-socks-pink' }, { $set: { imageUrl: 'https://cdn.example.com/custom-pink.png' } });
+  await db.model('Seed').deleteOne({ _id: 'orbit-media-v4' });
+  assert(await db.model('Seed').exists({ _id: 'orbit-media-v3' }));
+  assert.equal((await seedDatabase(db)).seeded, true);
+  const studio = await db.model('Studio').findById('studio-melbourne').lean();
+  assert.equal(studio.imageUrl, '/media/images/studios/core-collective.jpg');
+  assert.equal(studio.published, false);
+  assert.equal((await db.model('Product').findById('grip-socks-pink').lean()).imageUrl, 'https://cdn.example.com/custom-pink.png');
+  assert.equal((await seedDatabase(db)).seeded, false);
+});
+
+test('workout search finds instructor names and returns recommendation context', async () => {
+  const result = (await api.get('/api/v1/workouts?search=Mia&format=reformer').expect(200)).body;
+  assert(result.data.some((w: any) => w.id === 'reformer-reset' && w.instructors[0].name === 'Mia Chen' && w.studio.id === 'core-collective'));
+  assert.equal((await api.get('/api/v1/workouts?search=does-not-exist').expect(200)).body.data.length, 0);
+});
