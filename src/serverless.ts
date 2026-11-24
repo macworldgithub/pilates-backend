@@ -15,6 +15,18 @@ export function getApplication(): Promise<NestExpressApplication> {
 
 export default async function handler(req: Request, res: Response) {
   try {
+    // Vercel's /:path* rewrite forwards its capture as a query parameter.
+    // It is transport metadata, not a DiscoverQuery/PageQuery field. Remove it
+    // before Nest's strict query validation, preserving every actual API filter.
+    const url = new URL(req.url ?? '/', 'http://serverless.internal');
+    if (url.searchParams.has('path')) {
+      url.searchParams.delete('path');
+      req.url = url.pathname + url.search;
+    }
+    // Some Vercel runtimes also materialize req.query before Express receives it.
+    if (Object.prototype.hasOwnProperty.call(req, 'query') && req.query) {
+      delete req.query.path;
+    }
     const app = await getApplication();
     const express = app.getHttpAdapter().getInstance();
     // Keep the invocation alive through asynchronous controller/database work.

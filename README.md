@@ -92,7 +92,7 @@ Validation, a 64 KB JSON limit, security headers, exact-origin CORS, rate limiti
 
 See [the scope map](docs/scope.md). No production Shopify, Syncio, Peoplevox, Collabs, Klaviyo, Polar Analytics, GA, payment provider or App Store integration is enabled. There are no community features, bookings, marketplace/waitlists, live studio inventory, B2B reordering, payouts, Apple IAP, or AI form correction.
 
-The React Native UI in `../pilates` consumes these APIs for onboarding, discovery, details, variants, cart, referral attribution, quotes, demo orders and internal admin management. Its `src/api/config.ts` uses `http://10.0.2.2:4000/api/v1` on Android emulators and `http://localhost:4000/api/v1` on iOS simulators. A physical device requires the host's LAN address and backend `HOST=0.0.0.0`. The app never connects directly to MongoDB or bundles the admin token.
+The React Native UI in `../pilates` consumes these APIs for onboarding, discovery, details, variants, cart, referral attribution, quotes, demo orders and internal admin management. Its `src/api/config.ts` uses `https://pilates-backend-sigma.vercel.app/api/v1` for development and release builds. The mobile entry screen requires staff/admin sign-in before opening the corresponding prototype journeys. The app never connects directly to MongoDB or bundles the admin token.
 
 `npm run seed` also applies the additive `orbit-ui-v2` seed in `src/ui-seed-data.ts`. It adds the frontend's Core Collective / Mia Chen records, three Melbourne studios, two workouts, four products at their UI prices, studio-led affiliation and MIA10 / CORE-DEMO referral codes. Existing version-one records and admin edits are preserved. The `orbit-media-v3` migration replaces the UI records' original placeholder images with backend `/media/images/*` paths, while retaining custom image URLs. Images are served from `public/images`, which is also included in the Docker image. Completion markers are per seed version, so rerunning applies only missing versions. `GET /config` supplies onboarding areas, interest options and hero image URLs; `GET /referrals` lists available connections. The frontend contains no mock record or artwork lookup maps.
 
@@ -145,8 +145,22 @@ Run `npm run seed` once against the chosen database from a trusted local/CI envi
 
 After deploying, check `https://YOUR-DEPLOYMENT/api/v1/health`, `/api/v1/config`, `/docs`, `/docs/openapi.json` and `/media/images/products/grip-socks-pink.png`. Exercise onboarding, add-to-bag and demo checkout against the seeded target database. If Vercel Deployment Protection is enabled, native app requests also need a permitted access path; a sign-in HTML response is not an API JSON response.
 
-Update the mobile API URL in `../pilates/src/api/config.ts` to `https://YOUR-DEPLOYMENT/api/v1` when connecting the app. No deployed hostname has been assumed or embedded in the app.
+The mobile API URL in `../pilates/src/api/config.ts` is configured to `https://pilates-backend-sigma.vercel.app/api/v1`. Change it only when intentionally targeting a different environment.
 
 Validation: `npm run check`, `npm run vercel-build`, and `npm test`. The serverless integration tests invoke the actual `api/index.js` entry and cover shared initialization, warm requests, authentication, validation, media/Swagger assets, CORS, a transactional demo checkout, and retry after a failed cold start. A hosted Vercel deployment is still required to verify platform routing and the target Atlas network configuration.
 
 Configuration references: [Vercel Node.js functions](https://vercel.com/docs/functions/runtimes/node-js), [function files and rewrites](https://vercel.com/docs/project-configuration/vercel-json), and [NestJS serverless initialization](https://docs.nestjs.com/faq/serverless).
+
+## Hosted integration audit · 23 November 2026
+
+The supplied deployment is healthy, has the seeded Core Collective / Mia Chen / Reformer Reset records, and serves config/docs. However, catalog and other list endpoints currently return `400: property path should not exist`. Vercel forwards the `/:path*` rewrite capture as query metadata; Nest's strict query DTOs reject it. The prepared `src/serverless.ts` fix removes this reserved transport field from the URL and any pre-materialized request query before Nest receives the request, retaining actual filters and unknown-field validation. Two regression tests reproduce both runtime request shapes. Deploy the updated source to apply it; no reseeding is needed. Deployment is left to the user.
+
+After deployment, run:
+
+```sh
+npm run verify:deployed -- --checkout --report docs/deployed-api-verification.json
+```
+
+The check defaults to the supplied deployed host; override `ORBIT_API_URL` when intentionally testing another environment. It reads seeded business/admin records, creates and revokes disposable consumer/admin sessions, and optionally creates one simulated order when `--checkout` is supplied. It never changes seeded catalog records or inventory. Demo order/event history is retained. The script exits nonzero on failed status/contracts and writes a token-free report.
+
+`docs/deployed-api-verification.json` records the current hosted blocker. `docs/local-api-verification.json` records 100 passing requests against an isolated fresh local test database, including the complete simulated checkout. The backend's 40 HTTP integration tests pass. See `../API_INTEGRATION_AUDIT.md` for the complete brief-to-UI/API map and remaining hosted acceptance checks.

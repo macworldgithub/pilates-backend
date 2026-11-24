@@ -1,0 +1,39 @@
+{
+  "baseUrl": "https://pilates-backend-sigma.vercel.app/api/v1",
+  "checkedAt": "2026-11-24T07:28:57.496Z",
+  "result": "failed",
+  "requestCount": 5,
+  "message": "GET /studios?limit=100: {\"error\":{\"status\":400,\"message\":[\"property path should not exist\"]},\"timestamp\":\"2026-11-24T07:28:57.496Z\"}\n\n400 !== 200\n",
+  "simulatedCheckoutVerified": false,
+  "seededRecordsModified": false,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/config",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/docs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/docs/openapi.json",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios?limit=100",
+      "status": 400,
+      "expectedStatus": 200
+    }
+  ]
+}

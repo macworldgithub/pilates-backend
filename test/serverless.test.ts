@@ -82,6 +82,35 @@ test('Vercel entry preserves docs, media, preflight and the JSON body limit', as
   await api.get('/api/v1/not-a-route').expect(404);
 });
 
+test('Vercel rewrite metadata does not break catalog, personal or admin list validation', async () => {
+  const api = request(entry);
+  const studios = (await api.get('/api/v1/studios?path=api%2Fv1%2Fstudios&format=reformer&limit=100').expect(200)).body;
+  assert(studios.data.length);
+  assert(studios.data.every((s: any) => s.formats.includes('reformer')));
+  const workouts = (await api.get('/api/v1/workouts?path=api/v1/workouts&search=Mia&format=reformer').expect(200)).body;
+  assert(workouts.data.some((w: any) => w.id === 'reformer-reset'));
+  await api.get('/api/v1/shop/products?path=api/v1/shop/products&collection=grip-socks').expect(200);
+  await api.get('/api/v1/referrals?path=api/v1/referrals').expect(200);
+  await api.get('/api/v1/offers?path=api/v1/offers').expect(200);
+  // Removing routing metadata must not weaken validation for actual API input.
+  await api.get('/api/v1/studios?path=api/v1/studios&format=invalid').expect(400);
+  await api.get('/api/v1/studios?path=api/v1/studios&unexpected=value').expect(400);
+  const session = (await api.post('/api/v1/sessions?path=api/v1/sessions').expect(201)).body;
+  await api.get('/api/v1/shop/orders?path=api/v1/shop/orders').set('Authorization', `Bearer ${session.token}`).expect(200);
+  const admin = (await api.post('/api/v1/admin/auth/login?path=api/v1/admin/auth/login').send({ username: 'admin', password: 'OrbitAdmin123!' }).expect(201)).body;
+  await api.get('/api/v1/admin/studios?path=api/v1/admin/studios').set('Authorization', `Bearer ${admin.accessToken}`).expect(200);
+});
+
+test('Vercel materialized query metadata is removed while real filter values survive', async () => {
+  const adapter = (req: any, res: any) => {
+    Object.defineProperty(req, 'query', { value: { path: ['api', 'v1', 'studios'], format: 'mat', limit: '100' }, configurable: true });
+    return entry(req, res);
+  };
+  const result = (await request(adapter).get('/api/v1/studios?format=mat&limit=100').expect(200)).body;
+  assert(result.data.length);
+  assert(result.data.every((s: any) => s.formats.includes('mat')));
+});
+
 test('a cold-start failure responds safely and a later request retries initialization', async () => {
   // Load an independent function instance while leaving its real application factory intact.
   delete require.cache[require.resolve('../dist/serverless')];
