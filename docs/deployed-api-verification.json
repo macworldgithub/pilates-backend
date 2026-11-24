@@ -1,10 +1,18 @@
 {
   "baseUrl": "https://pilates-backend-sigma.vercel.app/api/v1",
-  "checkedAt": "2026-11-24T07:28:57.496Z",
-  "result": "failed",
-  "requestCount": 5,
-  "message": "GET /studios?limit=100: {\"error\":{\"status\":400,\"message\":[\"property path should not exist\"]},\"timestamp\":\"2026-11-24T07:28:57.496Z\"}\n\n400 !== 200\n",
-  "simulatedCheckoutVerified": false,
+  "checkedAt": "2026-11-24T07:47:42.528Z",
+  "result": "passed",
+  "requestCount": 100,
+  "catalog": {
+    "studios": 6,
+    "instructors": 3,
+    "workouts": 5,
+    "products": 7,
+    "referrals": 4,
+    "images": 10
+  },
+  "simulatedCheckoutVerified": true,
+  "demoOrderId": "demo-e69f14b5-3635-4b1a-a585-72917290e2ae",
   "seededRecordsModified": false,
   "checks": [
     {
@@ -32,8 +40,568 @@
     {
       "method": "GET",
       "path": "/studios?limit=100",
-      "status": 400,
+      "status": 200,
       "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/referrals?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/studio-melbourne",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/studio-sydney",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/studio-london",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/core-collective",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/pilates-room",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios/form-flow",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/instructors/instructor-ella",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/instructors/instructor-james",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/instructors/mia-chen",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts/reformer-reset",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts/full-body-mat-flow",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts/workout-balance",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts/workout-reformer",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts/workout-mat",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/product-socks",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/product-ball",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/product-bundle",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/grip-socks-pink",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/grip-socks-blue",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/yoga-mat-espresso",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products/starter-bundle",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/lifestyle/onboarding-hero.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/products/yoga-mat-espresso.png",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/studios/core-collective.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/studios/pilates-room.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/studios/form-flow.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/instructors/mia-chen.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/lifestyle/reformer-reset.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/products/grip-socks-pink.png",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/products/pilates-starter-bundle.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/media/images/products/grip-socks-blue.jpg",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/collections",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios?format=reformer&sort=nearest&latitude=-37.84&longitude=144.98&radiusKm=10&limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workouts?search=Mia&format=reformer&limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studios?search=orbit-no-match-92&limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/products?search=orbit-no-match-92&limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/offers?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/offers?latitude=-37.84&longitude=144.98&limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/cart",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "POST",
+      "path": "/sessions",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/shop/cart",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/shop/cart/items",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/shop/cart/items/grip-socks-pink/pink-s",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/shop/cart/items",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/referrals/FITZROY-DEMO",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "POST",
+      "path": "/referrals/apply",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "POST",
+      "path": "/events",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout/quote",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout/quote",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout",
+      "status": 409,
+      "expectedStatus": 409
+    },
+    {
+      "method": "GET",
+      "path": "/shop/cart",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/orders?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/orders/demo-e69f14b5-3635-4b1a-a585-72917290e2ae",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "POST",
+      "path": "/sessions",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/shop/orders/demo-e69f14b5-3635-4b1a-a585-72917290e2ae",
+      "status": 404,
+      "expectedStatus": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/shop/cart",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "POST",
+      "path": "/admin/auth/login",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "POST",
+      "path": "/admin/auth/login",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/studios?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/studios/form-flow",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/instructors?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/instructors/mia-chen",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/workouts?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/workouts/full-body-mat-flow",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/products?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/products/starter-bundle",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/referrals?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/referrals/referral-core",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/offers?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/offers/offer-fitzroy",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/affiliations?limit=100",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/activity/events?limit=1",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/activity/audit?limit=1",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/activity/orders?limit=1",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/shop/cart",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/auth/session",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "DELETE",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/sessions/me",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "DELETE",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/sessions/me",
+      "status": 401,
+      "expectedStatus": 401
     }
   ]
 }

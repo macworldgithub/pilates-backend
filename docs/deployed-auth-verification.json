@@ -1,0 +1,61 @@
+{
+  "baseUrl": "https://pilates-backend-sigma.vercel.app/api/v1",
+  "checkedAt": "2026-11-24T07:43:27.750Z",
+  "result": "passed",
+  "checks": [
+    {
+      "method": "POST",
+      "path": "/sessions",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "POST",
+      "path": "/admin/auth/login",
+      "status": 201,
+      "expectedStatus": 201
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/auth/session",
+      "status": 200,
+      "expectedStatus": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "status": 401,
+      "expectedStatus": 401
+    },
+    {
+      "method": "DELETE",
+      "path": "/sessions/me",
+      "status": 200,
+      "expectedStatus": 200
+    }
+  ]
+}
